@@ -1,0 +1,34 @@
+# nginx proxy address - http://172.17.0.1:8108
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "5m"
+    max-file: "1"
+
+services:
+  transfer-sh:
+    image: transfer-sh/transfer-sh:latest
+    container_name: transfer-sh-app
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - transfer-sh
+    ports:
+      - "8108:8108"
+    environment:
+      TZ: ${TZ:-America/New_York}
+      PUID: ${SERVICE_USER:-1000}
+      PGID: ${SERVICE_GROUP:-1000}
+    volumes:
+      - ./rootfs/config/transfer-sh:/config
+      - ./rootfs/data/transfer-sh:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8108"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  transfer-sh:
+    external: false
