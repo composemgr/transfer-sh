@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/transfer-sh` - Data storage
-- `./rootfs/data/transfer-sh` - Data storage
+- `./volumes/config/transfer-sh` - Data storage
+- `./volumes/data/transfer-sh` - Data storage
 
 ## 🔍 Logging
 
