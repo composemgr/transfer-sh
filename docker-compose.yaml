@@ -21,8 +21,8 @@ services:
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
     volumes:
-      - ./rootfs/config/transfer-sh:/config
-      - ./rootfs/data/transfer-sh:/data
+      - ./volumes/config/transfer-sh:/config
+      - ./volumes/data/transfer-sh:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8108"]
       interval: 30s
