@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:8108
 
+name: transfer-sh
 x-logging: &default-logging
   driver: json-file
   options:
@@ -8,27 +9,31 @@ x-logging: &default-logging
 
 services:
   transfer-sh:
-    image: transfer-sh/transfer-sh:latest
+    image: dutchcoders/transfer.sh:latest
+    pull_policy: always
     container_name: transfer-sh-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - transfer-sh
     ports:
-      - "8108:8108"
+      - "172.17.0.1:8108:8080"
     environment:
       TZ: ${TZ:-America/New_York}
-      PUID: ${SERVICE_USER:-1000}
-      PGID: ${SERVICE_GROUP:-1000}
+    command:
+      - "--provider=local"
+      - "--basedir=/tmp/transfer-sh"
+      - "--listener=:8080"
     volumes:
-      - ./volumes/config/transfer-sh:/config
-      - ./volumes/data/transfer-sh:/data
+      - ./volumes/data/transfer-sh:/tmp/transfer-sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8108"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 networks:
   transfer-sh:
+    name: transfer-sh
     external: false
