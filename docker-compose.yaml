@@ -17,10 +17,14 @@ services:
     logging: *default-logging
     networks:
       - transfer-sh
+      - proxy
+      - cloudflare
     ports:
       - "172.17.0.1:8108:8080"
     environment:
       TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: transfer-sh-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     command:
       - "--provider=local"
       - "--basedir=/tmp/transfer-sh"
@@ -32,8 +36,28 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://transfer-sh-app:8080'
+      - 'cloudflare.hostname=transfer-sh.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.transfer-sh-app.entrypoints=http'
+      - 'traefik.http.routers.transfer-sh-app-secure.tls=true'
+      - 'traefik.http.routers.transfer-sh-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.transfer-sh-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.transfer-sh-app.middlewares=transfer-sh-app-https-redirect'
+      - 'traefik.http.routers.transfer-sh-app-secure.entrypoints=https'
+      - 'traefik.http.routers.transfer-sh-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.transfer-sh-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.transfer-sh-app-secure.service=transfer-sh-app'
+      - 'traefik.http.services.transfer-sh-app.loadbalancer.server.port=8080'
 
 networks:
   transfer-sh:
     name: transfer-sh
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
